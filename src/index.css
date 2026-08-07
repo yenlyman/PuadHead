@@ -1,0 +1,169 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens from docs/design-reference.md.
+ * Values live on :root (plain CSS vars, swapped by prefers-color-scheme) and are
+ * re-exposed via @theme inline so Tailwind utilities (bg-primary, text-text-secondary, ...)
+ * stay in sync with the active color scheme at runtime without a class toggle.
+ */
+:root {
+  --color-primary: #d97757;
+  --color-surface: #f8f7f4;
+  --color-surface-card: #ffffff;
+  --color-border: #e5e3dc;
+  --color-text-primary: #1a1a18;
+  --color-text-secondary: #6b6a63;
+  --color-text-muted: #9b9a91;
+  --color-severity-2-bg: #fef3c7;
+  --color-severity-2-text: #92400e;
+  --color-severity-3-bg: #fee2e2;
+  --color-severity-3-text: #991b1b;
+  --color-heatmap-2: #fde68a;
+  --color-heatmap-3: #fca5a5;
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  color-scheme: light dark;
+}
+
+/* --color-text-muted has no dark-mode value in design-reference.md — interpolated
+   between text-secondary and border, same approach as the rest of the dark palette. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-primary: #e2916f;
+    --color-surface: #171613;
+    --color-surface-card: #242320;
+    --color-border: #3a3934;
+    --color-text-primary: #f0efe9;
+    --color-text-secondary: #b5b3a9;
+    --color-text-muted: #78766e;
+    --color-severity-2-bg: #3d2e0a;
+    --color-severity-2-text: #fbbf24;
+    --color-severity-3-bg: #3d1414;
+    --color-severity-3-text: #f87171;
+    --color-heatmap-2: #6b4a10;
+    --color-heatmap-3: #6b2020;
+  }
+}
+
+/* Manual theme override (Settings → light/dark/system) takes precedence over
+   prefers-color-scheme in both directions — see store/useThemeStore.js. */
+:root[data-theme='dark'] {
+  --color-primary: #e2916f;
+  --color-surface: #171613;
+  --color-surface-card: #242320;
+  --color-border: #3a3934;
+  --color-text-primary: #f0efe9;
+  --color-text-secondary: #b5b3a9;
+  --color-text-muted: #78766e;
+  --color-severity-2-bg: #3d2e0a;
+  --color-severity-2-text: #fbbf24;
+  --color-severity-3-bg: #3d1414;
+  --color-severity-3-text: #f87171;
+  --color-heatmap-2: #6b4a10;
+  --color-heatmap-3: #6b2020;
+}
+
+:root[data-theme='light'] {
+  --color-primary: #d97757;
+  --color-surface: #f8f7f4;
+  --color-surface-card: #ffffff;
+  --color-border: #e5e3dc;
+  --color-text-primary: #1a1a18;
+  --color-text-secondary: #6b6a63;
+  --color-text-muted: #9b9a91;
+  --color-severity-2-bg: #fef3c7;
+  --color-severity-2-text: #92400e;
+  --color-severity-3-bg: #fee2e2;
+  --color-severity-3-text: #991b1b;
+  --color-heatmap-2: #fde68a;
+  --color-heatmap-3: #fca5a5;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-surface: var(--color-surface);
+  --color-surface-card: var(--color-surface-card);
+  --color-border: var(--color-border);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-text-muted: var(--color-text-muted);
+  --color-severity-2-bg: var(--color-severity-2-bg);
+  --color-severity-2-text: var(--color-severity-2-text);
+  --color-severity-3-bg: var(--color-severity-3-bg);
+  --color-severity-3-text: var(--color-severity-3-text);
+  --color-heatmap-2: var(--color-heatmap-2);
+  --color-heatmap-3: var(--color-heatmap-3);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100svh;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+/*
+ * Breakpoint strategy — based on docs/pwa-platform-checklist.md, with one deviation:
+ * that doc's cover-mode query is `max-width:400px and max-aspect-ratio:6/5`. Tested
+ * against a real narrow-tall phone viewport (390x844), that condition also matched —
+ * max-aspect-ratio alone only excludes screens WIDER than tall, so it can't tell a
+ * near-square folded Flip7 cover screen (~277x287, ratio ~0.97) apart from a normal
+ * portrait iPhone (ratio ~0.45-0.56), both under 400px wide. Added `min-aspect-ratio`
+ * so only genuinely near-square viewports qualify; iPhones now correctly stay on the
+ * full quick-log layout. Flagged to the user — see PROJECT_MASTER.md known constraints.
+ */
+
+/* Default: full sections shown, cover-mode hidden — overridden below when folded. */
+.cover-mode {
+  display: none;
+}
+
+/* Cover mode — Flip7 พับอยู่: จอเกือบจัตุรัส */
+@media (max-width: 400px) and (min-aspect-ratio: 4/5) and (max-aspect-ratio: 6/5) {
+  .full-log-sections {
+    display: none;
+  }
+  .cover-mode {
+    display: block;
+  }
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 480px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablet — iPad mini */
+@media (min-width: 700px) {
+  .layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+}

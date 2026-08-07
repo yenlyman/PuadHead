@@ -1,0 +1,37 @@
+import { useNavigate } from 'react-router-dom'
+import { ChevronRight, Stethoscope } from 'lucide-react'
+
+// The only entry point into /diagnoses (mirrors SyncStatusBadge being the only path into
+// /login) — shown at the top of Dashboard, not tucked in Settings, because this is
+// information worth seeing every time the app opens, not just something to configure once.
+function DiagnosisChip({ diagnoses }) {
+  const navigate = useNavigate()
+  const latest = [...diagnoses].sort((a, b) => (a.date < b.date ? 1 : -1))[0]
+
+  if (!latest) {
+    return (
+      <button
+        type="button"
+        onClick={() => navigate('/diagnoses/new')}
+        className="mb-4 flex max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-card px-3 py-1 text-xs text-text-secondary shadow-sm"
+      >
+        <Stethoscope size={12} />
+        + บันทึกผลวินิจฉัย
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => navigate('/diagnoses')}
+      className="mb-4 flex max-w-full items-center gap-1.5 rounded-full border border-border bg-surface-card px-3 py-1 text-xs text-primary shadow-sm"
+    >
+      <Stethoscope size={12} className="shrink-0" />
+      <span className="min-w-0 break-words">{latest.diagnosisName}</span>
+      <ChevronRight size={12} className="shrink-0" />
+    </button>
+  )
+}
+
+export default DiagnosisChip
