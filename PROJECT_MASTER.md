@@ -167,11 +167,16 @@ Settings (ไม่ใช่ setting จริงๆ) ไปเป็นปุ�
 - [x] **ตัดช่อง "วันที่" ออกจากฟอร์มตอนเพิ่มใหม่ทั้งหมด** (`mode === 'add'`) — วันที่ถูกกำหนดแน่นอนจาก
       entry point อยู่แล้ว (ปุ่ม "บันทึกวันนี้" = วันนี้เสมอ, กดวันในปฏิทิน = วันนั้นเสมอ, หัวฟอร์มบอกวันที่
       อยู่แล้ว) เหลือช่องนี้ไว้เฉพาะตอนแก้ไขของเดิม (เผื่อบันทึกผิดวันจริงๆ)
+- [x] **ขยาย "บันทึกผลวินิจฉัย" ให้ครอบคลุมทุกครั้งที่พบหมอ ไม่ใช่แค่ครั้งแรก** — เพิ่ม `visitType`
+      (วินิจฉัยครั้งแรก/ติดตามอาการ/ปรับยา/ตรวจเพิ่มเติม/อื่นๆ — `src/lib/visitTypes.js`), `nextAppointmentDate`
+      (โชว่ต่อท้าย `DiagnosisChip` บน Dashboard เฉพาะตอนยังไม่ผ่านวันนัด — เทียบวันที่ตรงๆ ไม่ใช่การตีความ),
+      และแนบรูป/เอกสาร (`photoBase64`, mirror pattern เดียวกับรูปยาใน `MedicationForm.jsx` ทุกจุดรวม
+      `useDiagnosesStore.js`/`migrateLocalData.js` ที่ต้องแปลง Blob→base64 ก่อนเซฟ)
 
 **Schema ที่เพิ่ม**: `entries.location` (array), `entries.symptoms` มี key ใหม่ 11 ตัว (ของเก่าไม่มี key ใหม่
 = `undefined`, อ่านด้วย `?.[key]` อยู่แล้วไม่กระทบ), collection ใหม่ `diagnoses` (`diagnosisId`, `date`,
-`diagnosisName`, `medicationIds[]`, `note`) — IndexedDB bump เป็น v3, `firestore.rules` เพิ่ม
-`match /diagnoses/{diagnosisId}`
+`diagnosisName`, `visitType`, `medicationIds[]`, `nextAppointmentDate`, `note`, `photoBase64`) —
+IndexedDB bump เป็น v3, `firestore.rules` เพิ่ม `match /diagnoses/{diagnosisId}`
 
 **ยังไม่ได้เทส**:
 - [ ] guest mode → login migration ของ `diagnoses` (ต้องมี Google account จริงมาเทส — โค้ดใน

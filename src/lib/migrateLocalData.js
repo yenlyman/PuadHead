@@ -31,9 +31,11 @@ export async function migrateLocalDataIfNeeded(uid) {
       const photoBase64 = photoBlob ? await blobToBase64(photoBlob) : null
       return setDoc(doc(db, 'medications', med.id), sanitize({ ...rest, photoBase64, uid }))
     }),
-    ...diagnoses.map((diagnosis) =>
-      setDoc(doc(db, 'diagnoses', diagnosis.diagnosisId), sanitize({ ...diagnosis, uid })),
-    ),
+    ...diagnoses.map(async (diagnosis) => {
+      const { photoBlob, ...rest } = diagnosis
+      const photoBase64 = photoBlob ? await blobToBase64(photoBlob) : (rest.photoBase64 ?? null)
+      return setDoc(doc(db, 'diagnoses', diagnosis.diagnosisId), sanitize({ ...rest, photoBase64, uid }))
+    }),
   ])
 
   localStorage.setItem(flagKey(uid), '1')

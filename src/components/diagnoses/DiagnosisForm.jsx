@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings2 } from 'lucide-react'
+import { Camera, Settings2, X } from 'lucide-react'
 import { todayISO } from '../../lib/dateUtils'
 import { generateDiagnosisId } from '../../lib/db/diagnoses'
+import { resizeAndCompressImage } from '../../lib/images'
+import { VISIT_TYPE_OPTIONS } from '../../lib/visitTypes'
 import { useMedicationsStore } from '../../store/useMedicationsStore'
 import MedicationChips from '../log/MedicationChips'
 
@@ -11,8 +13,12 @@ function emptyForm() {
     diagnosisId: null,
     date: todayISO(),
     diagnosisName: '',
+    visitType: 'followup',
     medicationIds: [],
+    nextAppointmentDate: '',
     note: '',
+    photoBlob: null,
+    photoBase64: null,
   }
 }
 
@@ -25,6 +31,8 @@ function DiagnosisForm({ diagnosis, onSave, onCancel }) {
   const medications = useMedicationsStore((state) => state.medications)
   const loadMedications = useMedicationsStore((state) => state.load)
   const [form, setForm] = useState(emptyForm)
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState(null)
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     loadMedications()
@@ -36,16 +44,39 @@ function DiagnosisForm({ diagnosis, onSave, onCancel }) {
         diagnosisId: diagnosis.diagnosisId,
         date: diagnosis.date ?? todayISO(),
         diagnosisName: diagnosis.diagnosisName ?? '',
+        visitType: diagnosis.visitType ?? 'followup',
         medicationIds: diagnosis.medicationIds ?? [],
+        nextAppointmentDate: diagnosis.nextAppointmentDate ?? '',
         note: diagnosis.note ?? '',
+        photoBlob: null,
+        photoBase64: diagnosis.photoBase64 ?? null,
       })
     } else {
       setForm(emptyForm())
     }
   }, [diagnosis])
 
+  // Same reasoning as MedicationForm.jsx: a freshly-picked photo (Blob) previews via
+  // createObjectURL; a photo already saved on the record arrives as a base64 data URI
+  // and can be used as `src` directly.
+  useEffect(() => {
+    if (form.photoBlob) {
+      const url = URL.createObjectURL(form.photoBlob)
+      setPhotoPreviewUrl(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setPhotoPreviewUrl(form.photoBase64 ?? null)
+  }, [form.photoBlob, form.photoBase64])
+
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const compressed = await resizeAndCompressImage(file)
+    updateField('photoBlob', compressed)
   }
 
   function handleSubmit(e) {
@@ -55,8 +86,12 @@ function DiagnosisForm({ diagnosis, onSave, onCancel }) {
       diagnosisId: form.diagnosisId ?? generateDiagnosisId(),
       date: form.date,
       diagnosisName: form.diagnosisName.trim(),
+      visitType: form.visitType,
       medicationIds: form.medicationIds,
+      nextAppointmentDate: form.nextAppointmentDate || null,
       note: form.note.trim() || null,
+      photoBlob: form.photoBlob ?? undefined,
+      photoBase64: form.photoBase64 ?? null,
     })
   }
 
@@ -72,6 +107,21 @@ function DiagnosisForm({ diagnosis, onSave, onCancel }) {
           onChange={(e) => updateField('date', e.target.value)}
           className="rounded-lg border border-border bg-surface-card p-2 text-text-primary"
         />
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm text-text-secondary">
+        ประเภทการพบหมอ
+        <select
+          value={form.visitType}
+          onChange={(e) => updateField('visitType', e.target.value)}
+          className="rounded-lg border border-border bg-surface-card p-2 text-text-primary"
+        >
+          {VISIT_TYPE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="flex flex-col gap-1 text-sm text-text-secondary">
@@ -106,6 +156,16 @@ function DiagnosisForm({ diagnosis, onSave, onCancel }) {
       </div>
 
       <label className="flex flex-col gap-1 text-sm text-text-secondary">
+        นัดครั้งถัดไป (ถ้ามี)
+        <input
+          type="date"
+          value={form.nextAppointmentDate}
+          onChange={(e) => updateField('nextAppointmentDate', e.target.value)}
+          className="rounded-lg border border-border bg-surface-card p-2 text-text-primary"
+        />
+      </label>
+
+      <label className="flex flex-col gap-1 text-sm text-text-secondary">
         โน้ตเพิ่มเติม
         <textarea
           value={form.note}
@@ -114,6 +174,40 @@ function DiagnosisForm({ diagnosis, onSave, onCancel }) {
           className="rounded-lg border border-border bg-surface-card p-2 text-text-primary"
         />
       </label>
+
+      <div className="flex flex-col gap-2 text-sm text-text-secondary">
+        แนบรูป/เอกสาร (ถ้ามี) — เช่น ใบสั่งยา, ผลตรวจ, ใบนัด
+        {photoPreviewUrl ? (
+          <div className="relative w-32">
+            <img src={photoPreviewUrl} alt="" className="w-32 rounded-lg border border-border object-cover" />
+            <button
+              type="button"
+              onClick={() => setForm((prev) => ({ ...prev, photoBlob: null, photoBase64: null }))}
+              aria-label="ลบรูป"
+              className="absolute -right-2 -top-2 rounded-full bg-severity-3-bg p-1 text-severity-3-text"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex w-32 flex-col items-center gap-1 rounded-lg border border-dashed border-border p-4 text-text-muted"
+          >
+            <Camera size={20} />
+            ถ่าย/เลือกรูป
+          </button>
+        )}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={handlePhotoChange}
+          className="hidden"
+        />
+      </div>
 
       <div className="flex gap-2 pt-2">
         <button type="submit" className="flex-1 rounded-xl bg-primary py-3 font-medium text-white">

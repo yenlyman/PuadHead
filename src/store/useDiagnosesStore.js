@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { collection, deleteDoc, doc, onSnapshot, query, setDoc, where } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { sanitize } from '../lib/firestoreSanitize'
+import { blobToBase64 } from '../lib/images'
 import { useAuthStore } from './useAuthStore'
 import { deleteDiagnosis, getAllDiagnoses, putDiagnosis } from '../lib/db/diagnoses'
 
@@ -34,12 +35,14 @@ export const useDiagnosesStore = create((set, get) => ({
 
   async save(diagnosis) {
     const uid = useAuthStore.getState().user?.uid
+    const { photoBlob, ...rest } = diagnosis
+    const photoBase64 = photoBlob ? await blobToBase64(photoBlob) : (rest.photoBase64 ?? null)
     if (!uid) {
-      await putDiagnosis(diagnosis)
+      await putDiagnosis({ ...rest, photoBase64 })
       await get().load()
       return
     }
-    await setDoc(doc(db, 'diagnoses', diagnosis.diagnosisId), sanitize({ ...diagnosis, uid }))
+    await setDoc(doc(db, 'diagnoses', diagnosis.diagnosisId), sanitize({ ...rest, photoBase64, uid }))
   },
 
   async remove(diagnosisId) {
