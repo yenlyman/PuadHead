@@ -338,12 +338,34 @@ puadhead/
   PROJECT_MASTER.md                ไฟล์นี้
 ```
 
+## สถานะล่าสุด (สรุปเร็ว)
+
+**Deploy แล้ว** ที่ [puadheadd.web.app](https://puadheadd.web.app) และ push ขึ้น
+[github.com/yenlyman/PuadHead](https://github.com/yenlyman/PuadHead) ล่าสุด (`b82ad65`) — โค้ดใน repo,
+production, และเอกสารนี้ตรงกันหมด ณ จุดนี้
+
+**ทำเสร็จแล้ว** (Phase 1 → Phase 3 ทั้งหมด ดูรายละเอียดแต่ละ Phase ด้านบน): บันทึกอาการปวดหัวพร้อม
+อาการ/ตำแหน่ง/ยา ครบ, จัดการยา, บันทึกผลวินิจฉัย+ติดตามการพบหมอทุกครั้ง (ประเภทการพบหมอ/นัดครั้งถัดไป/
+แนบรูป), รายงาน+PDF export, guest/login hybrid sync, PWA installable, คู่มือผู้ใช้
+([docs/user-guide.md](docs/user-guide.md))
+
 ## Next steps ที่แนะนำ
 
-1. เทส guest→login migration ของ `diagnoses` ด้วย Google account จริง (ยังไม่เคย verify)
-2. เทสบนเครื่องจริง 3 เครื่องตาม manual test log ด้านบน (ทั้งของ Phase 1 เดิม, cross-device sync, และของ
-   Phase 3 ใหม่วันนี้)
+**ยังไม่ได้เทส (สำคัญ ควรทำก่อน release จริง)**:
+1. เทส guest→login migration ของ `diagnoses` ด้วย Google account จริง (รวมกรณีมีรูปแนบด้วย — ยังไม่เคย
+   verify เลยตั้งแต่สร้างฟีเจอร์นี้)
+2. เทสบนเครื่องจริง 3 เครื่อง (iPhone, iPad mini, Flip7) ตาม manual test log ด้านบน — **ค้างมาตั้งแต่
+   Phase 1 ยังไม่เคยทำเลยสักข้อ** (Add to Home Screen, cold-start offline, cross-device sync realtime,
+   security rule isolation ระหว่าง account)
+
+**งานเล็กที่ยังไม่ทำ**:
 3. สลับ app icon placeholder เป็นของจริงถ้ามี artwork
-4. ระวัง main JS chunk เริ่มโต (~276KB gzip) ถ้าเพิ่มฟีเจอร์ใหม่อีกมาก ควรพิจารณา code-split เพิ่ม
-4. รอบถัดไป (ยังไม่เริ่ม, ตามที่คุยไว้): ชื่อผู้ป่วยแสดงบน PDF, แนบเอกสาร (ใบนัด/บิล), entry-level notes,
-   trigger correlation analysis, weather API auto-fetch
+4. เฝ้าระวัง main JS chunk (~277KB gzip ตอนนี้ โตขึ้นเรื่อยๆ ทุกฟีเจอร์ใหม่) ถ้าเพิ่มอีกมากควรพิจารณา
+   code-split
+
+**รอบถัดไปที่ยังไม่เริ่ม** (ตามที่คุยไว้ระหว่างทาง ไม่ใช่ของเร่งด่วน):
+5. ชื่อผู้ป่วยแสดงบน PDF, trigger correlation analysis (นับความถี่ context tag คู่กับวันปวด ต้องคิดเรื่อง
+   lag effect ของความเครียดด้วย), weather API auto-fetch
+6. **"Symptom Tracker" เฟสใหญ่** (event-driven schema, tier 1-3 UX ตามเอกสารที่คุยกัน) — ตกลงไว้ว่าจะ deploy
+   คู่ขนานที่ Firebase Hosting site ที่สอง (`-dev` suffix) ไม่แตะ production เดิม — ยังไม่ได้เริ่ม scaffold
+   เลยสักขั้นตอน
