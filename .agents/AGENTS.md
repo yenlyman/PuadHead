@@ -10,6 +10,8 @@
   (CURRENT_FOCUS / LAST_DECISION / NEXT_ACTION) — Central AutoSave (`~/Developer/_tools/autosave/`)
   จะ commit + push ให้เอง
 - **ทำต่อจากอีกเครื่อง**: ดู `git log --stat` และ `~/Developer/_tools/autosave/logs/autosave.log` ก่อน
+- **เอกสารอาจเก่ากว่าโค้ด**: สถานะใน `PROJECT_MASTER.md` / `HANDOFF.md` / แผนใน `docs/` ต้องเช็คกับของจริงก่อนเชื่อ
+  (โค้ด, เทส, `git log`, เลข build/เวอร์ชัน, เว็บที่ deploy จริง) — เจอไม่ตรงให้แก้เอกสารให้ตรงโค้ด แล้วบอกเฮีย
 
 ## 2. วางแผนก่อนแตะโค้ด
 
